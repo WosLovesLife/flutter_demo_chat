@@ -34,10 +34,37 @@ class ChatScreen extends StatefulWidget {
   }
 }
 
+class Message {
+  Message(this.text, this.animationController);
+
+  final String text;
+  final AnimationController animationController;
+}
+
 class ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
-  final List<ChatMessage> _messages = <ChatMessage>[];
+  final List<Message> _messages = <Message>[];
   final TextEditingController _textController = new TextEditingController();
   bool _isComposing = false;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _messages.length = 1000;
+    for (int i = 0; i < _messages.length; i++) {
+      AnimationController animationController = new AnimationController(
+        duration: new Duration(milliseconds: 200),
+        vsync: this,
+      );
+
+      _messages[i] = new Message(
+        'test text dules it to be rebuilt the next time your app needs to update the screen. $i',
+        animationController,
+      );
+
+      animationController.forward();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -52,7 +79,7 @@ class ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
             new Flexible(
                 child: new ListView.builder(
                   reverse: true,
-                  itemBuilder: (_, int index) => _messages[index],
+                  itemBuilder: (_, int index) => new ChatMessage(_messages[index]),
                   itemCount: _messages.length,
                 )
             ),
@@ -124,9 +151,9 @@ class ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     setState(() {
       _isComposing = false;
     });
-    ChatMessage message = new ChatMessage(
-      text: text,
-      animationController: new AnimationController(
+    Message message = new Message(
+      text,
+      new AnimationController(
         duration: new Duration(milliseconds: 200),
         vsync: this,
       ),
@@ -139,7 +166,7 @@ class ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
 
   @override
   void dispose() {
-    for (ChatMessage message in _messages) {
+    for (Message message in _messages) {
       message.animationController.dispose();
     }
     super.dispose();
@@ -149,10 +176,9 @@ class ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
 const String _name = "WosLovesLife";
 
 class ChatMessage extends StatelessWidget {
-  ChatMessage({this.text, this.animationController});
+  ChatMessage(this.message);
 
-  final String text;
-  final AnimationController animationController;
+  final Message message;
 
   @override
   Widget build(BuildContext context) {
@@ -160,14 +186,14 @@ class ChatMessage extends StatelessWidget {
       begin: const Offset(-1.0, 0.0),
       end: Offset.zero,
     ).animate(new CurvedAnimation(
-      parent: animationController,
+      parent: message.animationController,
       curve: Curves.fastOutSlowIn,
     ));
 
     return
       new SizeTransition(
         sizeFactor: new CurvedAnimation(
-          parent: animationController,
+          parent: message.animationController,
           curve: Curves.easeOut,
         ),
         axisAlignment: 0.0,
@@ -196,7 +222,7 @@ class ChatMessage extends StatelessWidget {
                       ),
                       new Container(
                         margin: const EdgeInsets.only(top: 5.0),
-                        child: new Text(text),
+                        child: new Text(message.text),
                       ),
                     ],
                   ),
